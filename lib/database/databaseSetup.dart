@@ -1,5 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'package:food_ordering_app/database/crudOperations.dart'; // Import CRUD operations file
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
@@ -54,25 +55,6 @@ class DatabaseHelper {
         )''');
 
     print('Database tables created successfully.');
-  }
-
-  // Function to insert test data into the database
-  Future<void> insertTestData() async {
-    final db = await database;
-
-    // Insert test data into `food_items`
-    await db.insert('food_items', {'name': 'Pizza', 'cost': 9.99});
-    await db.insert('food_items', {'name': 'Burger', 'cost': 5.99});
-    await db.insert('food_items', {'name': 'Sushi', 'cost': 14.99});
-
-    // Insert test data into `order_plans`
-    await db.insert('order_plans', {
-      'date': '2024-11-28',
-      'target_cost': 30.00,
-      'selected_items': 'Pizza, Burger'
-    });
-
-    print('Test data inserted successfully.');
   }
 
   // Function to show tables and their data
