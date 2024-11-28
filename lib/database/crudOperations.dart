@@ -24,6 +24,45 @@ Future<void> updateFoodItem(int id, String name, double cost) async {
   );
 }
 
+// Function to populate the database with sample food items (20 items)
+Future<void> populateFoodItems() async {
+  final db = await DatabaseHelper.instance.database;
+  final existingItems = await db.query('food_items');
+
+  // Only populate the table if it is empty
+  if (existingItems.isEmpty) {
+    List<Map<String, dynamic>> sampleFoodItems = [
+      {'name': 'Pizza', 'cost': 8.99},
+      {'name': 'Burger', 'cost': 5.99},
+      {'name': 'Butter Chicken', 'cost': 12.99},
+      {'name': 'Pasta', 'cost': 7.49},
+      {'name': 'Salad', 'cost': 4.99},
+      {'name': 'Sandwich', 'cost': 3.99},
+      {'name': 'Fried Chicken', 'cost': 9.99},
+      {'name': 'Steak', 'cost': 14.99},
+      {'name': 'Tacos', 'cost': 6.99},
+      {'name': 'Wrap', 'cost': 5.49},
+      {'name': 'Hot Dog', 'cost': 3.49},
+      {'name': 'Nachos', 'cost': 4.49},
+      {'name': 'Burrito', 'cost': 7.99},
+      {'name': 'Ice Cream', 'cost': 3.49},
+      {'name': 'Fries', 'cost': 2.99},
+      {'name': 'Coke', 'cost': 1.99},
+      {'name': 'Soup', 'cost': 4.59},
+      {'name': 'Root Beer', 'cost': 1.99},
+      {'name': 'Mango Juice', 'cost': 1.99},
+      {'name': 'Chocolate Smoothie', 'cost': 4.99},
+    ];
+
+    // Insert sample items into the database
+    for (var item in sampleFoodItems) {
+      await insertFoodItem(item['name']!, item['cost']!);
+    }
+
+    print('Sample food items added to the database.');
+  }
+}
+
 // Function to delete a food item
 Future<void> deleteFoodItem(int id) async {
   final db = await DatabaseHelper.instance.database;

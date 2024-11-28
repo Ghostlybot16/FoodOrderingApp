@@ -44,7 +44,7 @@ class DatabaseHelper {
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           name TEXT NOT NULL,
           cost REAL NOT NULL
-        )''');
+        )''' );
 
     // Create the `order_plans` table if it doesn't already exist
     await databaseInstance.execute('''CREATE TABLE IF NOT EXISTS order_plans (
@@ -52,18 +52,55 @@ class DatabaseHelper {
           date TEXT NOT NULL,
           target_cost REAL NOT NULL,
           selected_items TEXT NOT NULL
-        )''');
+        )''' );
 
     print('Database tables created successfully.');
   }
 
-  // Function to show tables and their data
+  // Function to fetch all saved orders from the 'order_plans' table
+  Future<List<Map<String, dynamic>>> fetchSavedOrders() async {
+    final db = await database;
+    return await db.query('order_plans'); // Fetch all rows from order_plans
+  }
+
+  // Function to save a new order plan to the 'order_plans' table
+  Future<void> saveOrderPlan(String date, double targetCost, String selectedItems) async {
+    final db = await database;
+    await db.insert('order_plans', {
+      'date': date,
+      'target_cost': targetCost,
+      'selected_items': selectedItems,
+    });
+  }
+
+  // Function to clear all food items and reset auto-increment counters
+  Future<void> clearFoodItemsIfNeeded() async {
+    final db = await database;
+    final foodItems = await db.query('food_items');
+    if (foodItems.isNotEmpty) {
+      await db.delete('food_items');
+      await db.rawDelete('DELETE FROM sqlite_sequence WHERE name="food_items"');
+      print('Food items table cleared and ID counter reset.');
+    }
+  }
+
+  // Function to clear all order plans and reset auto-increment counters
+  Future<void> clearOrderPlansIfNeeded() async {
+    final db = await database;
+    final orderPlans = await db.query('order_plans');
+    if (orderPlans.isNotEmpty) {
+      await db.delete('order_plans');
+      await db.rawDelete('DELETE FROM sqlite_sequence WHERE name="order_plans"');
+      print('Order plans table cleared and ID counter reset.');
+    }
+  }
+
+  // Debugging function to show all tables and their data
   Future<void> debugShowTables() async {
     final db = await database;
 
     // Fetch all tables in the database
-    final tables = await db.rawQuery(
-        "SELECT name FROM sqlite_master WHERE type='table';");
+    final tables = await db.rawQuery("SELECT name FROM sqlite_master WHERE type='table';");
     print('Tables in the database: $tables');
 
     // Loop through each table and print its contents
@@ -76,7 +113,7 @@ class DatabaseHelper {
     }
   }
 
-  // Close the database connection
+  // Function to close the database connection
   Future<void> closeDatabaseConnection() async {
     final db = _cachedDatabaseInstance;
     if (db != null) {

@@ -66,7 +66,7 @@ class _FoodListScreenState extends State<FoodListScreen> {
       await deleteFoodItem(id); // Call delete function from CRUD
       fetchFoodItemsFromDatabase(); // Refresh the food items list after deletion
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Food item deleted successfully!')),
+        const SnackBar(content: Text('Item deleted successfully!')),
       );
     }
   }
