@@ -3,7 +3,9 @@ import '../database/crudOperations.dart';
 import '../styles/styles_add_foodscreen.dart'; // Import the styles
 
 class AddFoodScreen extends StatefulWidget {
-  const AddFoodScreen({Key? key}) : super(key: key);
+  final Map<String, dynamic>? foodItem;  // Accept foodItem as a named parameter
+
+  const AddFoodScreen({Key? key, this.foodItem}) : super(key: key);  // Constructor to accept foodItem
 
   @override
   _AddFoodScreenState createState() => _AddFoodScreenState();
@@ -13,8 +15,19 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController costController = TextEditingController();
 
-  // Function to handle adding a new food item
-  void _addFoodItem() async {
+  @override
+  void initState() {
+    super.initState();
+
+    // If a foodItem is passed for editing, populate the text controllers
+    if (widget.foodItem != null) {
+      nameController.text = widget.foodItem!['name'];
+      costController.text = widget.foodItem!['cost'].toString();
+    }
+  }
+
+  // Function to handle adding or editing a food item
+  void _saveFoodItem() async {
     final name = nameController.text;
     final cost = double.tryParse(costController.text);
 
@@ -26,23 +39,26 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
       return;
     }
 
-    // Insert the food item into the database
-    await insertFoodItem(name, cost);
+    if (widget.foodItem == null) {
+      // If no foodItem exists (creating a new item)
+      await insertFoodItem(name, cost);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Food item added successfully!')),
+      );
+    } else {
+      // If foodItem exists (editing an existing item)
+      await updateFoodItem(widget.foodItem!['id'], name, cost);  // Update the existing food item
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Food item updated successfully!')),
+      );
+    }
 
-    // Fetch food items after insertion for validation
-    List<Map<String, dynamic>> foodItems = await fetchFoodItems();
-
-    // Debug: Print the fetched food items
-    print('Food items after insertion: $foodItems');
-
-    // Show success message
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Food item added successfully!')),
-    );
-
-    // Clear the input fields
+    // Clear the input fields after saving
     nameController.clear();
     costController.clear();
+
+    // Go back to the previous screen
+    Navigator.pop(context);
   }
 
   @override
@@ -76,12 +92,12 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
             // Add button
             Center(
               child: ElevatedButton(
-                onPressed: _addFoodItem,
+                onPressed: _saveFoodItem,  // Use the updated function to save the item
                 style: ElevatedButton.styleFrom(
                   foregroundColor: Colors.white, backgroundColor: Colors.blue, // Text color
                   textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
-                child: const Text('Add Food Item'),
+                child: Text(widget.foodItem == null ? 'Add Food Item' : 'Update Food Item'), // Change the button text depending on mode
               ),
             ),
           ],

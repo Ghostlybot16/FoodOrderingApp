@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:food_ordering_app/screens/add_foodScreen.dart';
 import 'package:food_ordering_app/database/crudOperations.dart'; // Import CRUD operations
+import 'package:food_ordering_app/screens/foodListScreen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); // Ensure Flutter is fully initialized
@@ -23,6 +24,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => const HomeScreen(), // Home screen
         '/addFood': (context) => const AddFoodScreen(), // Add food screen
+        '/foodList': (context) => const FoodListScreen(), // List food items screen
       },
     );
   }
@@ -38,14 +40,27 @@ class HomeScreen extends StatelessWidget {
         title: const Text('Food Ordering App'),
       ),
       body: Center(
-        child: ElevatedButton(
-          onPressed: () {
-            // Navigate to AddFoodScreen
-            Navigator.pushNamed(context, '/addFood');
-          },
-          child: const Text('Add Food Item'),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              onPressed: () {
+                // Navigate to FoodListScreen
+                Navigator.pushNamed(context, '/foodList');
+              },
+              child: const Text('Go to Food List'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                // Navigate to AddFoodScreen
+                Navigator.pushNamed(context, '/addFood');
+              },
+              child: const Text('Add Food Item'),
+            ),
+          ],
         ),
       ),
     );
   }
 }
+
