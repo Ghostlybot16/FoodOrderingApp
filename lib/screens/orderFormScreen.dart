@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../database/crudOperations.dart'; // CRUD operations
 import '../database/databaseSetup.dart'; // Database helper
-import 'foodListScreen.dart'; // Food list screen for selecting food
 
 class OrderFormScreen extends StatefulWidget {
   const OrderFormScreen({Key? key}) : super(key: key);
@@ -11,7 +10,8 @@ class OrderFormScreen extends StatefulWidget {
 }
 
 class _OrderFormScreenState extends State<OrderFormScreen> {
-  List<Map<String, dynamic>> foodItems = []; // To store food items from the database
+  List<Map<String, dynamic>> foodItems = []; // To store all food items
+  List<Map<String, dynamic>> filteredFoodItems = []; // To store filtered food items based on cost
   List<Map<String, dynamic>> selectedItems = []; // To store selected food items
   final TextEditingController targetCostController = TextEditingController();
   DateTime selectedDate = DateTime.now(); // Store selected date
@@ -70,6 +70,37 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
     }
   }
 
+  // Function to fetch all food items from the database and filter them based on target cost
+  Future<void> _fetchFoodItems() async {
+    final fetchedFoodItems = await fetchFoodItems(); // Fetch the food items from your database
+
+    setState(() {
+      foodItems = fetchedFoodItems; // Store the fetched food items
+      _filterFoodItems(); // Call the filter function whenever the food items are fetched or target cost is updated
+    });
+  }
+
+  // Function to filter food items based on target cost
+  void _filterFoodItems() {
+    final targetCost = double.tryParse(targetCostController.text) ?? 0.0;
+    double currentTotalCost = 0.0;
+
+    // Filter the food items based on the target cost
+    filteredFoodItems = foodItems.where((foodItem) {
+      if (currentTotalCost + foodItem['cost'] <= targetCost) {
+        currentTotalCost += foodItem['cost']; // Update total cost if this item is selected
+        return true;
+      }
+      return false; // Exclude the item if it exceeds the target cost
+    }).toList();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchFoodItems(); // Fetch the food items when the screen is first loaded
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -84,6 +115,11 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
             child: TextField(
               controller: targetCostController,
               keyboardType: TextInputType.number,
+              onChanged: (value) {
+                setState(() {
+                  _filterFoodItems(); // Filter food items whenever the target cost changes
+                });
+              },
               decoration: const InputDecoration(
                 labelText: 'Target Cost',
                 border: OutlineInputBorder(),
@@ -92,64 +128,40 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
           ),
           const SizedBox(height: 20),
 
-          // Date Picker input
+          // Display selected date
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            padding: const EdgeInsets.all(16.0),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Selected Date: ${selectedDate.toLocal().toString().split(' ')[0]}',
-                  style: const TextStyle(fontSize: 16),
-                ),
-                ElevatedButton(
+                const Text('Selected Date: '),
+                Text("${selectedDate.toLocal()}".split(' ')[0]),
+                IconButton(
+                  icon: const Icon(Icons.calendar_today),
                   onPressed: _selectDate,
-                  child: const Text('Select Date'),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 20),
 
-          // List food items to choose from
+          // List of filtered food items based on target cost
           Expanded(
-            child: FutureBuilder<List<Map<String, dynamic>>>(
-              future: fetchFoodItems(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                }
-
-                if (snapshot.hasData) {
-                  foodItems = snapshot.data!;
-                  return ListView.builder(
-                    itemCount: foodItems.length,
-                    itemBuilder: (context, index) {
-                      final foodItem = foodItems[index];
-                      final isSelected = selectedItems.contains(foodItem);
-
-                      return CheckboxListTile(
-                        title: Text(foodItem['name']),
-                        subtitle: Text('\$${foodItem['cost']}'),
-                        value: isSelected,
-                        onChanged: (bool? value) {
-                          _selectFoodItem(foodItem);
-                        },
-                      );
-                    },
-                  );
-                }
-
-                return const Center(child: Text('No food items available.'));
+            child: ListView.builder(
+              itemCount: filteredFoodItems.length,
+              itemBuilder: (context, index) {
+                final foodItem = filteredFoodItems[index];
+                return CheckboxListTile(
+                  title: Text(foodItem['name']),
+                  subtitle: Text('\$${foodItem['cost']}'),
+                  value: selectedItems.contains(foodItem),
+                  onChanged: (bool? selected) {
+                    _selectFoodItem(foodItem);
+                  },
+                );
               },
             ),
           ),
 
-          // Save order button
+          // Button to save the order
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: ElevatedButton(

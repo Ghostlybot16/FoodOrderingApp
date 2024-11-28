@@ -57,11 +57,29 @@ class DatabaseHelper {
     print('Database tables created successfully.');
   }
 
-  // Function to fetch all saved orders from the 'order_plans' table
-  Future<List<Map<String, dynamic>>> fetchSavedOrders() async {
-    final db = await database;
-    return await db.query('order_plans'); // Fetch all rows from order_plans
+  // // Function to fetch all saved orders from the 'order_plans' table
+  // Future<List<Map<String, dynamic>>> fetchSavedOrders() async {
+  //   final db = await database;
+  //   return await db.query('order_plans'); // Fetch all rows from order_plans
+  // }
+  // DatabaseHelper class method to fetch saved orders with optional date filter
+  Future<List<Map<String, dynamic>>> fetchSavedOrders({String? date}) async {
+    final db = await DatabaseHelper.instance.database;
+
+    // If a date is provided, filter the orders by that date
+    if (date != null && date.isNotEmpty) {
+      return await db.query(
+        'order_plans', // Use the correct table name
+        where: 'date = ?', // Filter based on the 'date' column
+        whereArgs: [date],
+      );
+    } else {
+      // If no date is provided, fetch all orders
+      return await db.query('order_plans');
+    }
   }
+
+
 
   // Function to save a new order plan to the 'order_plans' table
   Future<void> saveOrderPlan(String date, double targetCost, String selectedItems) async {
@@ -122,4 +140,34 @@ class DatabaseHelper {
       print('Database connection closed.');
     }
   }
+
+  // Function to update an existing order
+  Future<void> updateOrder(int orderId, String date, double targetCost, String selectedItems) async {
+    final db = await DatabaseHelper.instance.database;
+
+    await db.update(
+      'order_plans',
+      {
+        'date': date,
+        'target_cost': targetCost,
+        'selected_items': selectedItems,
+      },
+      where: 'id = ?', // Specify the condition for updating the specific order
+      whereArgs: [orderId], // Pass the ID of the order to update
+    );
+  }
+
+
+// Function to delete an order by its ID
+  Future<void> deleteOrder(int orderId) async {
+    final db = await DatabaseHelper.instance.database;
+
+    await db.delete(
+      'order_plans', // The table name
+      where: 'id = ?', // The condition
+      whereArgs: [orderId], // The argument to delete the specific order
+    );
+  }
+
+
 }

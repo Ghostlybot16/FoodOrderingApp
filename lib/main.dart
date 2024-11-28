@@ -9,8 +9,8 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized(); // Ensure Flutter is fully initialized
 
   // Clear food items and reset auto-increment counters before app starts
-  await clearFoodItemsIfNeeded();
-  await clearOrderPlansIfNeeded();
+  //await clearFoodItemsIfNeeded();
+  //await clearOrderPlansIfNeeded();
 
   // Populate food items with sample data of 20 food items
   await populateFoodItems();
